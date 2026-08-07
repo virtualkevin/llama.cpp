@@ -247,6 +247,7 @@ export {
 export {
 	deriveAgenticSections,
 	buildAssistantRawOutput,
+	parseAssistantEditContent,
 	parseToolResultWithImages,
 	splitSearchSummaryList,
 	hasAgenticContent,

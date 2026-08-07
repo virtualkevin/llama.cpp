@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { AgenticSectionType } from '$lib/enums';
 import { REASONING_TAGS } from '$lib/constants';
-import { buildAssistantRawOutput, type AgenticSection } from '$lib/utils/agentic';
+import {
+	buildAssistantRawOutput,
+	parseAssistantEditContent,
+	type AgenticSection
+} from '$lib/utils/agentic';
 
 function makeSection(
 	overrides: Partial<AgenticSection> & { type: AgenticSectionType }
@@ -73,5 +77,26 @@ describe('buildAssistantRawOutput', () => {
 		expect(buildAssistantRawOutput(sections)).toBe(
 			['{', '  "name": "broken",', '  "arguments": "{not json"', '}', '', '', 'result'].join('\n')
 		);
+	});
+});
+
+describe('parseAssistantEditContent', () => {
+	it('separates edited reasoning from the visible response', () => {
+		expect(
+			parseAssistantEditContent('<think>\nRevised reasoning</think>\n\nVisible response')
+		).toEqual({
+			content: 'Visible response',
+			reasoningContent: 'Revised reasoning'
+		});
+	});
+
+	it('clears reasoning when the think block is removed', () => {
+		expect(parseAssistantEditContent('Response only')).toEqual({ content: 'Response only' });
+	});
+
+	it('leaves an unterminated think block as response text', () => {
+		expect(parseAssistantEditContent('<think>unfinished')).toEqual({
+			content: '<think>unfinished'
+		});
 	});
 });

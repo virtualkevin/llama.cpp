@@ -1,8 +1,6 @@
 <script lang="ts">
-	import { ICON_CLASS_DEFAULT } from '$lib/constants/css-classes';
-	import { Square, SkipForward } from '@lucide/svelte';
+	import { Square } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button';
-	import { ChatService } from '$lib/services';
 	import {
 		ChatFormActionsAdd,
 		ChatFormActionModels,
@@ -31,7 +29,6 @@
 		class?: string;
 		disabled?: boolean;
 		isLoading?: boolean;
-		isReasoning?: boolean;
 		isRecording?: boolean;
 		showAddButton?: boolean;
 		showModelSelector?: boolean;
@@ -50,7 +47,6 @@
 		class: className = '',
 		disabled = false,
 		isLoading = false,
-		isReasoning = false,
 		isRecording = false,
 		showAddButton = true,
 		showModelSelector = true,
@@ -96,12 +92,6 @@
 	export function openModelSelector() {
 		selectorModelRef?.open();
 	}
-	// the streaming assistant message carries both the completion id and the model that
-	// produced it, targeting reasoning control from the same source keeps them consistent
-	let activeMessage = $derived(
-		conversationsStore.activeMessages[conversationsStore.activeMessages.length - 1]
-	);
-
 	let hasProcessedTokens = $derived.by(() => {
 		if (!page.params.id) return false;
 
@@ -177,23 +167,6 @@
 			/>
 		{/if}
 	</div>
-
-	{#if isReasoning}
-		<Button
-			type="button"
-			variant="secondary"
-			onclick={() =>
-				ChatService.stopReasoning(activeMessage?.completionId ?? '', activeMessage?.model)}
-			class="group h-8 w-8 rounded-full p-0"
-			title="Skip reasoning"
-		>
-			<span class="sr-only">Skip reasoning</span>
-
-			<SkipForward
-				class="{ICON_CLASS_DEFAULT} stroke-muted-foreground group-hover:stroke-foreground"
-			/>
-		</Button>
-	{/if}
 
 	{#if isLoading && !canSubmit}
 		<Button

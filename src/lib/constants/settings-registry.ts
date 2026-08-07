@@ -324,30 +324,6 @@ const SETTINGS_REGISTRY: Record<string, SettingsSectionEntry> = {
 				}
 			},
 			{
-				key: SETTINGS_KEYS.DYNATEMP_RANGE,
-				label: 'Dynamic temperature range',
-				help: 'Addon for the temperature sampler. The added value to the range of dynamic temperature, which adjusts probabilities by entropy of tokens.',
-				defaultValue: undefined,
-				type: SettingsFieldType.INPUT,
-				section: SETTINGS_SECTION_SLUGS.SAMPLING,
-				sync: {
-					serverKey: SETTINGS_KEYS.DYNATEMP_RANGE,
-					paramType: SyncableParameterType.NUMBER
-				}
-			},
-			{
-				key: SETTINGS_KEYS.DYNATEMP_EXPONENT,
-				label: 'Dynamic temperature exponent',
-				help: 'Addon for the temperature sampler. Smoothes out the probability redistribution based on the most probable token.',
-				defaultValue: undefined,
-				type: SettingsFieldType.INPUT,
-				section: SETTINGS_SECTION_SLUGS.SAMPLING,
-				sync: {
-					serverKey: SETTINGS_KEYS.DYNATEMP_EXPONENT,
-					paramType: SyncableParameterType.NUMBER
-				}
-			},
-			{
 				key: SETTINGS_KEYS.TOP_K,
 				label: 'Top K',
 				help: 'Keeps only k top tokens.',
@@ -375,42 +351,9 @@ const SETTINGS_REGISTRY: Record<string, SettingsSectionEntry> = {
 				sync: { serverKey: SETTINGS_KEYS.MIN_P, paramType: SyncableParameterType.NUMBER }
 			},
 			{
-				key: SETTINGS_KEYS.XTC_PROBABILITY,
-				label: 'XTC probability',
-				help: 'XTC sampler cuts out top tokens; this parameter controls the chance of cutting tokens at all. 0 disables XTC.',
-				defaultValue: undefined,
-				type: SettingsFieldType.INPUT,
-				section: SETTINGS_SECTION_SLUGS.SAMPLING,
-				sync: {
-					serverKey: SETTINGS_KEYS.XTC_PROBABILITY,
-					paramType: SyncableParameterType.NUMBER
-				}
-			},
-			{
-				key: SETTINGS_KEYS.XTC_THRESHOLD,
-				label: 'XTC threshold',
-				help: 'XTC sampler cuts out top tokens; this parameter controls the token probability that is required to cut that token.',
-				defaultValue: undefined,
-				type: SettingsFieldType.INPUT,
-				section: SETTINGS_SECTION_SLUGS.SAMPLING,
-				sync: {
-					serverKey: SETTINGS_KEYS.XTC_THRESHOLD,
-					paramType: SyncableParameterType.NUMBER
-				}
-			},
-			{
-				key: SETTINGS_KEYS.TYP_P,
-				label: 'Typical P',
-				help: 'Sorts and limits tokens based on the difference between log-probability and entropy.',
-				defaultValue: undefined,
-				type: SettingsFieldType.INPUT,
-				section: SETTINGS_SECTION_SLUGS.SAMPLING,
-				sync: { serverKey: SETTINGS_KEYS.TYP_P, paramType: SyncableParameterType.NUMBER }
-			},
-			{
 				key: SETTINGS_KEYS.MAX_TOKENS,
 				label: 'Max tokens',
-				help: 'The maximum number of token per output. Use -1 for infinite (no limit).',
+				help: 'Maximum output length. Values less than 1 use the server default of 4096 tokens.',
 				defaultValue: undefined,
 				type: SettingsFieldType.INPUT,
 				section: SETTINGS_SECTION_SLUGS.SAMPLING,
@@ -418,23 +361,6 @@ const SETTINGS_REGISTRY: Record<string, SettingsSectionEntry> = {
 					serverKey: SETTINGS_KEYS.MAX_TOKENS,
 					paramType: SyncableParameterType.NUMBER
 				}
-			},
-			{
-				key: SETTINGS_KEYS.SAMPLERS,
-				label: 'Samplers',
-				help: 'The order at which samplers are applied, in simplified way. Default is "top_k;typ_p;top_p;min_p;temperature": top_k->typ_p->top_p->min_p->temperature',
-				defaultValue: '',
-				type: SettingsFieldType.INPUT,
-				section: SETTINGS_SECTION_SLUGS.SAMPLING,
-				sync: { serverKey: SETTINGS_KEYS.SAMPLERS, paramType: SyncableParameterType.STRING }
-			},
-			{
-				key: SETTINGS_KEYS.BACKEND_SAMPLING,
-				label: 'Backend sampling',
-				help: 'Enable backend-based samplers. When enabled, supported samplers run on the accelerator backend for faster sampling.',
-				defaultValue: false,
-				type: SettingsFieldType.CHECKBOX,
-				section: SETTINGS_SECTION_SLUGS.SAMPLING
 			}
 		]
 	},
@@ -443,18 +369,6 @@ const SETTINGS_REGISTRY: Record<string, SettingsSectionEntry> = {
 		slug: SETTINGS_SECTION_SLUGS.PENALTIES,
 		icon: AlertTriangle,
 		settings: [
-			{
-				key: SETTINGS_KEYS.REPEAT_LAST_N,
-				label: 'Repeat last N',
-				help: 'Last n tokens to consider for penalizing repetition',
-				defaultValue: undefined,
-				type: SettingsFieldType.INPUT,
-				section: SETTINGS_SECTION_SLUGS.PENALTIES,
-				sync: {
-					serverKey: SETTINGS_KEYS.REPEAT_LAST_N,
-					paramType: SyncableParameterType.NUMBER
-				}
-			},
 			{
 				key: SETTINGS_KEYS.REPEAT_PENALTY,
 				label: 'Repeat penalty',
@@ -488,51 +402,6 @@ const SETTINGS_REGISTRY: Record<string, SettingsSectionEntry> = {
 				section: SETTINGS_SECTION_SLUGS.PENALTIES,
 				sync: {
 					serverKey: SETTINGS_KEYS.FREQUENCY_PENALTY,
-					paramType: SyncableParameterType.NUMBER
-				}
-			},
-			{
-				key: SETTINGS_KEYS.DRY_MULTIPLIER,
-				label: 'DRY multiplier',
-				help: 'DRY sampling reduces repetition in generated text even across long contexts. This parameter sets the DRY sampling multiplier.',
-				defaultValue: undefined,
-				type: SettingsFieldType.INPUT,
-				section: SETTINGS_SECTION_SLUGS.PENALTIES,
-				sync: {
-					serverKey: SETTINGS_KEYS.DRY_MULTIPLIER,
-					paramType: SyncableParameterType.NUMBER
-				}
-			},
-			{
-				key: SETTINGS_KEYS.DRY_BASE,
-				label: 'DRY base',
-				help: 'DRY sampling reduces repetition in generated text even across long contexts. This parameter sets the DRY sampling base value.',
-				defaultValue: undefined,
-				type: SettingsFieldType.INPUT,
-				section: SETTINGS_SECTION_SLUGS.PENALTIES,
-				sync: { serverKey: SETTINGS_KEYS.DRY_BASE, paramType: SyncableParameterType.NUMBER }
-			},
-			{
-				key: SETTINGS_KEYS.DRY_ALLOWED_LENGTH,
-				label: 'DRY allowed length',
-				help: 'DRY sampling reduces repetition in generated text even across long contexts. This parameter sets the allowed length for DRY sampling.',
-				defaultValue: undefined,
-				type: SettingsFieldType.INPUT,
-				section: SETTINGS_SECTION_SLUGS.PENALTIES,
-				sync: {
-					serverKey: SETTINGS_KEYS.DRY_ALLOWED_LENGTH,
-					paramType: SyncableParameterType.NUMBER
-				}
-			},
-			{
-				key: SETTINGS_KEYS.DRY_PENALTY_LAST_N,
-				label: 'DRY penalty last N',
-				help: 'DRY sampling reduces repetition in generated text even across long contexts. This parameter sets DRY penalty for the last n tokens.',
-				defaultValue: undefined,
-				type: SettingsFieldType.INPUT,
-				section: SETTINGS_SECTION_SLUGS.PENALTIES,
-				sync: {
-					serverKey: SETTINGS_KEYS.DRY_PENALTY_LAST_N,
 					paramType: SyncableParameterType.NUMBER
 				}
 			}
@@ -580,22 +449,6 @@ const SETTINGS_REGISTRY: Record<string, SettingsSectionEntry> = {
 		slug: SETTINGS_SECTION_SLUGS.DEVELOPER,
 		icon: Code,
 		settings: [
-			{
-				key: SETTINGS_KEYS.PRE_ENCODE_CONVERSATION,
-				label: 'Pre-fill KV cache after response',
-				help: 'After each response, re-submit the conversation to pre-fill the server KV cache. Makes the next turn faster since the prompt is already encoded while you read the response.',
-				defaultValue: false,
-				type: SettingsFieldType.CHECKBOX,
-				section: SETTINGS_SECTION_SLUGS.DEVELOPER
-			},
-			{
-				key: SETTINGS_KEYS.DISABLE_REASONING_PARSING,
-				label: 'Disable reasoning content parsing',
-				help: 'Send reasoning_format=none so the server returns thinking tokens inline instead of extracting them into a separate field.',
-				defaultValue: false,
-				type: SettingsFieldType.CHECKBOX,
-				section: SETTINGS_SECTION_SLUGS.DEVELOPER
-			},
 			{
 				key: SETTINGS_KEYS.EXCLUDE_REASONING_FROM_CONTEXT,
 				label: 'Exclude reasoning from context',

@@ -8,17 +8,21 @@ import type { ReasoningEffortLevel } from '$lib/types';
 export const REASONING_EFFORT_LABELS: Record<string, string> = {
 	[ReasoningEffort.DEFAULT]: 'Default',
 	[ReasoningEffort.OFF]: 'Off',
+	[ReasoningEffort.MINIMAL]: 'Minimal',
 	[ReasoningEffort.LOW]: 'Low',
 	[ReasoningEffort.MEDIUM]: 'Medium',
 	[ReasoningEffort.HIGH]: 'High',
+	[ReasoningEffort.XHIGH]: 'Extra high',
 	[ReasoningEffort.MAX]: 'Max'
 };
 
 export const REASONING_EFFORT_LEVELS: ReasoningEffortLevel[] = [
-	{ value: ReasoningEffort.DEFAULT, label: 'Default' },
-	{ value: ReasoningEffort.OFF, label: 'Off' },
-	{ value: ReasoningEffort.LOW, label: 'Low' },
-	{ value: ReasoningEffort.MEDIUM, label: 'Medium' },
-	{ value: ReasoningEffort.HIGH, label: 'High' },
-	{ value: ReasoningEffort.MAX, label: 'Max', hasInfo: true }
+	{ value: ReasoningEffort.DEFAULT, label: 'Default', description: 'Model default' },
+	{ value: ReasoningEffort.OFF, label: 'Off', description: 'No reasoning' },
+	{ value: ReasoningEffort.MINIMAL, label: 'Minimal', description: 'Fastest reasoning' },
+	{ value: ReasoningEffort.LOW, label: 'Low', description: 'Less reasoning' },
+	{ value: ReasoningEffort.MEDIUM, label: 'Medium', description: 'Balanced' },
+	{ value: ReasoningEffort.HIGH, label: 'High', description: 'More reasoning' },
+	{ value: ReasoningEffort.XHIGH, label: 'Extra high', description: 'Extended reasoning' },
+	{ value: ReasoningEffort.MAX, label: 'Max', description: 'DeepSeek V4 maximum', hasInfo: true }
 ];

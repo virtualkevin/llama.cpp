@@ -246,6 +246,40 @@ export function buildAssistantRawOutput(sections: AgenticSection[]): string {
 }
 
 /**
+ * Split the assistant editor's raw representation back into its persisted
+ * response and reasoning fields. The editor deliberately exposes the familiar
+ * `<think>...</think>` block so both parts can be changed in one place.
+ */
+export function parseAssistantEditContent(rawContent: string): {
+	content: string;
+	reasoningContent?: string;
+} {
+	const startIndex = rawContent.indexOf(REASONING_TAGS.START);
+	if (startIndex === -1) return { content: rawContent };
+
+	const reasoningStart = startIndex + REASONING_TAGS.START.length;
+	const endIndex = rawContent.indexOf(REASONING_TAGS.END, reasoningStart);
+	if (endIndex === -1) return { content: rawContent };
+
+	const reasoningContent = rawContent
+		.slice(reasoningStart, endIndex)
+		.replace(/^\r?\n/, '')
+		.replace(/\r?\n$/, '');
+	const before = rawContent.slice(0, startIndex);
+	let after = rawContent.slice(endIndex + REASONING_TAGS.END.length);
+
+	// buildAssistantRawOutput separates reasoning and response with two blank
+	// lines. Remove only that generated delimiter, not response whitespace the
+	// user intentionally entered.
+	if (!before) after = after.replace(/^(?:\r?\n){1,3}/, '');
+
+	return {
+		content: before + after,
+		reasoningContent: reasoningContent || undefined
+	};
+}
+
+/**
  * Collect consecutive tool messages starting at `startIndex`.
  */
 function collectToolMessages(messages: DatabaseMessage[], startIndex: number): DatabaseMessage[] {

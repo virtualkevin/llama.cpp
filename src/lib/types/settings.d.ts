@@ -83,9 +83,9 @@ export interface SettingsChatServiceOptions {
 	disableReasoningParsing?: boolean;
 	// Strip reasoning content from context before sending
 	excludeReasoningFromContext?: boolean;
-	// Enable model thinking/reasoning via chat_template_kwargs
+	// Enable model thinking/reasoning
 	enableThinking?: boolean;
-	// Reasoning effort level (low/medium/high/max) for thinking models
+	// Qualitative reasoning effort level for thinking models
 	reasoningEffort?: ReasoningEffort;
 	tools?: OpenAIToolDefinition[];
 	// Generation parameters

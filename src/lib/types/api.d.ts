@@ -281,6 +281,7 @@ export interface ApiChatCompletionRequest {
 	tools?: ApiChatCompletionTool[];
 	// Reasoning parameters
 	reasoning_format?: string;
+	reasoning_effort?: string;
 	// Generation parameters
 	temperature?: number;
 	max_tokens?: number;
@@ -367,6 +368,13 @@ export interface ApiChatCompletionResponse {
 		};
 		finish_reason?: string | null;
 	}>;
+	timings?: {
+		prompt_n?: number;
+		prompt_ms?: number;
+		predicted_n?: number;
+		predicted_ms?: number;
+		cache_n?: number;
+	};
 }
 
 export interface ApiSlotData {

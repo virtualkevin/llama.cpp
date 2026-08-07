@@ -97,11 +97,17 @@
 <svelte:window onkeydown={handleGlobalKeydown} />
 
 <div class="relative w-full max-w-[80%]">
+	{#if isAssistantMessage}
+		<p class="mb-2 text-xs text-muted-foreground">
+			Edit reasoning inside <code>&lt;think&gt;...&lt;/think&gt;</code>; edit the response below it.
+		</p>
+	{/if}
+
 	<ChatForm
 		value={editCtx.editedContent}
 		attachments={editCtx.editedExtras}
 		bind:uploadedFiles={editCtx.editedUploadedFiles}
-		placeholder="Edit your message..."
+		placeholder={isAssistantMessage ? 'Edit reasoning and response...' : 'Edit your message...'}
 		showMcpPromptButton
 		showAddButton={editCtx.messageRole === MessageRole.USER}
 		showModelSelector={editCtx.messageRole === MessageRole.USER}

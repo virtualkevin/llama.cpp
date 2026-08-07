@@ -1,6 +1,5 @@
 import { ReasoningEffort } from '$lib/enums';
 import { REASONING_EFFORT_LEVELS } from '$lib/constants/reasoning-effort';
-import { REASONING_EFFORT_TOKENS } from '$lib/constants/reasoning-effort-tokens';
 import type { ReasoningEffortLevel } from '$lib/types';
 import type { DatabaseMessage } from '$lib/types/database';
 import {
@@ -85,10 +84,7 @@ export function useReasoningMenu(): UseReasoningMenuReturn {
 			return currentEffort === level.value;
 		},
 		tokenLabel(level: ReasoningEffortLevel): string | null {
-			if (level.value === ReasoningEffort.DEFAULT) return 'Model default';
-			const tokens = REASONING_EFFORT_TOKENS[level.value];
-			if (tokens === undefined) return null;
-			return tokens === -1 ? 'Unlimited' : `Max ${tokens.toLocaleString()} tokens`;
+			return level.description ?? null;
 		},
 		select(level: ReasoningEffortLevel): void {
 			conversationsStore.setReasoningEffort(level.value as ReasoningEffort);

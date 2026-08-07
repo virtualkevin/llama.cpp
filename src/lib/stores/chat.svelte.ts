@@ -41,7 +41,7 @@ import {
 	CWD_CLEARED_TEXT
 } from '$lib/utils';
 import { toolsStore } from '$lib/stores/tools.svelte';
-import { classifyContinueIntent } from '$lib/utils/agentic';
+import { classifyContinueIntent, parseAssistantEditContent } from '$lib/utils/agentic';
 import {
 	MAX_INACTIVE_CONVERSATION_STATES,
 	INACTIVE_CONVERSATION_STATE_MAX_AGE_MS,
@@ -106,7 +106,6 @@ class ChatStore {
 	// in-flight discoverActiveStream guard, keyed by conv id
 	private discoveringConvs = new SvelteSet<string>();
 	private abortControllers = new SvelteMap<string, AbortController>();
-	private preEncodeAbortController: AbortController | null = null;
 	private processingStates = new SvelteMap<string, ApiProcessingState | null>();
 	private conversationStateTimestamps = new SvelteMap<string, ConversationStateEntry>();
 	private activeConversationId = $state<string | null>(null);
@@ -1064,9 +1063,6 @@ class ChatStore {
 			return;
 		}
 
-		// Cancel any in-flight pre-encode request
-		this.cancelPreEncode();
-
 		// Consume MCP resource attachments - converts them to extras and clears the live store
 		const resourceExtras = mcpStore.consumeResourceAttachmentsAsExtras();
 		const allExtras = resourceExtras.length > 0 ? [...(extras || []), ...resourceExtras] : extras;
@@ -1423,16 +1419,6 @@ class ChatStore {
 
 				if (onComplete) onComplete(streamedContent);
 				if (isRouterMode()) modelsStore.fetchRouterModels().catch(console.error);
-				// Pre-encode conversation in KV cache for faster next turn
-				if (config().preEncodeConversation) {
-					this.triggerPreEncode(
-						allMessages,
-						assistantMessage,
-						streamedContent,
-						effectiveModel,
-						!!config().excludeReasoningFromContext
-					);
-				}
 			},
 			onError: async (error: Error) => {
 				this.setStreamingActive(false);
@@ -1564,12 +1550,6 @@ class ChatStore {
 	async stopGenerationForChat(convId: string): Promise<void> {
 		await this.savePartialResponseIfNeeded(convId);
 		this.setStreamingActive(false);
-		// tell the server to stop the generation, not just drop the HTTP socket. without this the
-		// detached drain keeps producing tokens until eos or max_tokens. use the frozen identity
-		// captured when the session started, not the live dropdown
-		const streamStateForStop = this.chatStreamingStates.get(convId);
-		const modelForStop = streamStateForStop?.model ?? ChatService.getStreamState(convId)?.model;
-		void ChatService.cancelServerStream(convId, modelForStop);
 		// an explicit stop leaves nothing to resume and kills a pending resume retry
 		ChatService.clearStreamState(convId);
 		const retryTimer = this.resumeRetryTimers.get(convId);
@@ -1737,7 +1717,6 @@ class ChatStore {
 	async regenerateMessage(messageId: string): Promise<void> {
 		const activeConv = conversationsStore.activeConversation;
 		if (!activeConv || this.isChatLoadingInternal(activeConv.id)) return;
-		this.cancelPreEncode();
 		const result = this.getMessageByIdWithRole(messageId, MessageRole.ASSISTANT);
 		if (!result) return;
 		const { index: messageIndex } = result;
@@ -1767,7 +1746,6 @@ class ChatStore {
 	async regenerateMessageWithBranching(messageId: string, modelOverride?: string): Promise<void> {
 		const activeConv = conversationsStore.activeConversation;
 		if (!activeConv || this.isChatLoadingInternal(activeConv.id)) return;
-		this.cancelPreEncode();
 		try {
 			const idx = conversationsStore.findMessageIndex(messageId);
 			if (idx === -1) return;
@@ -1918,7 +1896,6 @@ class ChatStore {
 		if (!activeConv) return;
 		const anchor = conversationsStore.activeMessages[anchorIndex];
 		if (!anchor) return;
-		this.cancelPreEncode();
 		this.setChatLoading(activeConv.id, true);
 		this.clearChatStreaming(activeConv.id);
 		try {
@@ -2167,6 +2144,7 @@ class ChatStore {
 		if (!result) return;
 
 		const { message: msg, index: idx } = result;
+		const { content, reasoningContent } = parseAssistantEditContent(newContent);
 
 		try {
 			if (shouldBranch) {
@@ -2176,7 +2154,8 @@ class ChatStore {
 						type: msg.type,
 						timestamp: Date.now(),
 						role: msg.role,
-						content: newContent,
+						content,
+						reasoningContent,
 						toolCalls: msg.toolCalls || '',
 						children: [],
 						model: msg.model
@@ -2186,8 +2165,8 @@ class ChatStore {
 
 				await conversationsStore.updateCurrentNode(newMessage.id);
 			} else {
-				await DatabaseService.updateMessage(msg.id, { content: newContent });
-				conversationsStore.updateMessageAtIndex(idx, { content: newContent });
+				await DatabaseService.updateMessage(msg.id, { content, reasoningContent });
+				conversationsStore.updateMessageAtIndex(idx, { content, reasoningContent });
 			}
 
 			conversationsStore.updateConversationTimestamp();
@@ -2547,42 +2526,6 @@ class ChatStore {
 		if (currentConfig.customJson) apiOptions.custom = currentConfig.customJson;
 
 		return apiOptions;
-	}
-
-	private cancelPreEncode(): void {
-		if (this.preEncodeAbortController) {
-			this.preEncodeAbortController.abort();
-			this.preEncodeAbortController = null;
-		}
-	}
-
-	private async triggerPreEncode(
-		allMessages: DatabaseMessage[],
-		assistantMessage: DatabaseMessage,
-		assistantContent: string,
-		model?: string | null,
-		excludeReasoning?: boolean
-	): Promise<void> {
-		this.cancelPreEncode();
-		this.preEncodeAbortController = new AbortController();
-
-		const signal = this.preEncodeAbortController.signal;
-
-		try {
-			const allIdle = await ChatService.areAllSlotsIdle(model, signal);
-			if (!allIdle || signal.aborted) return;
-
-			const messagesWithAssistant: DatabaseMessage[] = [
-				...allMessages,
-				{ ...assistantMessage, content: assistantContent }
-			];
-
-			await ChatService.preEncode(messagesWithAssistant, model, excludeReasoning, signal);
-		} catch (err) {
-			if (!isAbortError(err)) {
-				console.warn('[ChatStore] Pre-encode failed:', err);
-			}
-		}
 	}
 }
 

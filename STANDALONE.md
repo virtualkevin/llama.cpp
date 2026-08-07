@@ -49,8 +49,17 @@ The browser uses the original llama.cpp UI unchanged. The stateless host:
 - forwards OpenAI-compatible `/v1` requests to vLLM;
 - provides the read-only `/props` metadata expected by llama.cpp UI;
 - advertises reasoning support without exposing a fake chat template;
-- maps the reasoning selector to vLLM's native `reasoning_effort` values;
-- disables llama-server-only resumable streams and slot inspection; and
-- removes llama.cpp-only generation fields before forwarding chat requests.
+- maps the reasoning selector to every vLLM-native `reasoning_effort` value;
+- normalizes vLLM reasoning chunks for live display and keeps edited reasoning in browser storage;
+- requests continuous usage data and translates it into the UI's prompt and generation statistics;
+- applies `DEFAULT_MAX_TOKENS` when the browser does not send an output limit;
+- aborts the upstream generation when its browser connection closes;
+- disables llama-server-only prefill, resumable streams, and slot inspection; and
+- removes llama.cpp-only generation fields while preserving vLLM-specific Custom JSON options.
+
+The visible generation controls are limited to parameters supported by vLLM. MCP remains a
+browser-direct feature (and is therefore subject to the target server's CORS/TLS policy); the host
+does not provide an MCP proxy. Multi-model routing and LoRA switching are not provided by this
+single-model host.
 
 The compatibility layer is intentionally separate from upstream UI code so upstream refreshes remain small and reviewable.
