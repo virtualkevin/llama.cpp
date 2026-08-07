@@ -1,0 +1,11 @@
+.git
+.github
+.svelte-kit
+.vitest-attachments
+dev-dist
+dist
+node_modules
+storybook-static
+test-results
+tests
+*.log

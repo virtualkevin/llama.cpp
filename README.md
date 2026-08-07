@@ -1,5 +1,7 @@
 # llama-ui
 
+> This branch is a standalone extraction of the llama.cpp WebUI with a stateless vLLM compatibility host. See [STANDALONE.md](STANDALONE.md) for deployment and [MAINTAINING.md](MAINTAINING.md) for upstream updates. Conversations and settings remain in browser storage.
+
 A modern, feature-rich web interface for llama-server built with SvelteKit. This UI provides an intuitive chat interface with advanced file handling, conversation management, and comprehensive model interaction capabilities.
 
 Llama UI supports two server operation modes:

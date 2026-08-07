@@ -1,0 +1,18 @@
+services:
+  webui:
+    build: .
+    container_name: llama-ui
+    network_mode: host
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3131
+      VLLM_BASE_URL: http://127.0.0.1:8000
+      DEFAULT_MAX_TOKENS: 4096
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,noexec,nosuid,nodev
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
