@@ -48,6 +48,8 @@ The browser uses the original llama.cpp UI unchanged. The stateless host:
 - serves the compiled static files;
 - forwards OpenAI-compatible `/v1` requests to vLLM;
 - provides the read-only `/props` metadata expected by llama.cpp UI;
+- advertises reasoning support without exposing a fake chat template;
+- maps the reasoning selector to vLLM's native `reasoning_effort` values;
 - disables llama-server-only resumable streams and slot inspection; and
 - removes llama.cpp-only generation fields before forwarding chat requests.
 

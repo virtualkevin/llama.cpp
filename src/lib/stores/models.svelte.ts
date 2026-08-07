@@ -27,6 +27,24 @@ import {
 
 import { conversationsStore } from '$lib/stores/conversations.svelte';
 
+function propsSupportThinking(props?: ApiLlamaCppServerProps | null): boolean {
+	if (typeof props?.supports_thinking === 'boolean') return props.supports_thinking;
+	return detectThinkingSupport(props?.chat_template ?? '');
+}
+
+function propsThinkingSupportDetails(props?: ApiLlamaCppServerProps | null): {
+	supported: boolean;
+	reason: string;
+} {
+	if (typeof props?.supports_thinking === 'boolean') {
+		return {
+			supported: props.supports_thinking,
+			reason: 'Declared by server'
+		};
+	}
+	return detectThinkingSupportWithReason(props?.chat_template ?? '');
+}
+
 /**
  * modelsStore - Reactive store for model management in both MODEL and ROUTER modes.
  *
@@ -257,7 +275,7 @@ class ModelsStore {
 	 */
 	get supportsThinking(): boolean {
 		if (!isRouterMode()) {
-			return detectThinkingSupport(serverStore.props?.chat_template ?? '');
+			return propsSupportThinking(serverStore.props);
 		}
 
 		const modelId = this.selectedModelName;
@@ -267,7 +285,7 @@ class ModelsStore {
 			this.fetchModelProps(modelId);
 		}
 		const props = this.getModelProps(modelId);
-		return detectThinkingSupport(props?.chat_template ?? '');
+		return propsSupportThinking(props);
 	}
 
 	/**
@@ -277,7 +295,7 @@ class ModelsStore {
 	 */
 	checkModelSupportsThinking(modelId: string): boolean {
 		if (!isRouterMode()) {
-			return detectThinkingSupport(serverStore.props?.chat_template ?? '');
+			return propsSupportThinking(serverStore.props);
 		}
 
 		if (!modelId) return false;
@@ -287,7 +305,7 @@ class ModelsStore {
 		}
 
 		const props = this.getModelProps(modelId);
-		return detectThinkingSupport(props?.chat_template ?? '');
+		return propsSupportThinking(props);
 	}
 
 	/**
@@ -295,7 +313,7 @@ class ModelsStore {
 	 */
 	get thinkingSupportDetails(): { supported: boolean; reason: string } {
 		if (!isRouterMode()) {
-			return detectThinkingSupportWithReason(serverStore.props?.chat_template ?? '');
+			return propsThinkingSupportDetails(serverStore.props);
 		}
 
 		const modelId = this.selectedModelName;
@@ -307,7 +325,7 @@ class ModelsStore {
 			this.fetchModelProps(modelId);
 		}
 		const props = this.getModelProps(modelId);
-		return detectThinkingSupportWithReason(props?.chat_template ?? '');
+		return propsThinkingSupportDetails(props);
 	}
 
 	/**

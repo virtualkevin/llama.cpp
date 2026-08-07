@@ -199,6 +199,11 @@ export { default as ChatFormActionSubmit } from './ChatForm/ChatFormActions/Chat
 export { default as ChatFormActionModels } from './ChatForm/ChatFormActions/ChatFormActionModels.svelte';
 
 /**
+ * Visible reasoning-effort selector for thinking models.
+ */
+export { default as ChatFormActionReasoning } from './ChatForm/ChatFormActions/ChatFormActionReasoning.svelte';
+
+/**
  * Dropdown submenu for managing tool permissions in the chat form.
  *
  * Displays a collapsible list of available tools organized by group (Built-in / JSON Schema).

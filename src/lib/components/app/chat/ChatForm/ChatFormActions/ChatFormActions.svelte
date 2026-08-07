@@ -6,6 +6,7 @@
 	import {
 		ChatFormActionsAdd,
 		ChatFormActionModels,
+		ChatFormActionReasoning,
 		ChatFormActionRecord,
 		ChatFormActionSubmit,
 		ChatFormContextGauge
@@ -151,6 +152,8 @@
 				{onMcpResourcesClick}
 				onMcpSettingsClick={() => goto(ROUTES.MCP_SERVERS)}
 			/>
+
+			<ChatFormActionReasoning {disabled} />
 		</div>
 	{/if}
 

@@ -44,6 +44,9 @@ const allowedChatFields = new Set([
 	'parallel_tool_calls',
 	'response_format',
 	'user',
+	'reasoning_effort',
+	'thinking_token_budget',
+	'include_reasoning',
 	'chat_template_kwargs',
 	'continue_final_message',
 	'add_generation_prompt'
@@ -90,9 +93,14 @@ async function sanitizeChatBody(body, req) {
 		delete output.max_tokens;
 	}
 
-	if (Number.isFinite(input.thinking_budget_tokens)) {
+	const enableThinking = input.chat_template_kwargs?.enable_thinking;
+	if (enableThinking === false) {
+		output.reasoning_effort = 'none';
+	} else if (Number.isFinite(input.thinking_budget_tokens)) {
 		const budget = input.thinking_budget_tokens;
 		output.reasoning_effort = budget <= 512 ? 'low' : budget <= 2048 ? 'medium' : 'high';
+	} else if (enableThinking === true && !output.reasoning_effort) {
+		output.reasoning_effort = 'max';
 	}
 
 	// llama-server does not require a model name, so the UI omits it in single-model mode.
@@ -192,7 +200,8 @@ async function serveProps(req, res) {
 		model_alias: modelName,
 		role: 'MODEL',
 		modalities: { vision: false, audio: false, video: false },
-		chat_template: '{{ reasoning_effort }}',
+		supports_thinking: true,
+		chat_template: '',
 		bos_token: '',
 		eos_token: '',
 		build_info: 'standalone llama.cpp WebUI for vLLM',

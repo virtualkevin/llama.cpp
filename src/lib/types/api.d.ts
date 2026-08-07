@@ -256,6 +256,7 @@ export interface ApiLlamaCppServerProps {
 		video: boolean;
 	};
 	chat_template: string;
+	supports_thinking?: boolean;
 	bos_token: string;
 	eos_token: string;
 	build_info: string;
