@@ -9,7 +9,6 @@
 	} from '#lib/components/app/chat/index.ts';
 	import {
 		AGENTIC_TEXT_COPY_SEPARATOR,
-		REASONING_TAGS,
 		ROUTES,
 		SYSTEM_MESSAGE_PLACEHOLDER
 	} from '#lib/constants/index.ts';
@@ -68,51 +67,7 @@
 	let isSynthetic = $derived(Boolean(message.isSynthetic));
 	let isCompaction = $derived(message.type === MessageType.COMPACTION);
 
-	let rawEditContent = $derived.by(() => {
-		if (message.role !== MessageRole.ASSISTANT) return undefined;
-
-		const sections = deriveAgenticSections(message, toolMessages, [], false);
-		const parts: string[] = [];
-
-		for (const section of sections) {
-			switch (section.type) {
-				case AgenticSectionType.REASONING:
-				case AgenticSectionType.REASONING_PENDING:
-					parts.push(`${REASONING_TAGS.START}\n${section.content}\n${REASONING_TAGS.END}`);
-
-					break;
-
-				case AgenticSectionType.TEXT:
-					parts.push(section.content);
-
-					break;
-
-				case AgenticSectionType.TOOL_CALL:
-				case AgenticSectionType.TOOL_CALL_PENDING:
-				case AgenticSectionType.TOOL_CALL_STREAMING: {
-					const callObj: Record<string, unknown> = { name: section.toolName };
-
-					if (section.toolArgs) {
-						try {
-							callObj.arguments = JSON.parse(section.toolArgs);
-						} catch {
-							callObj.arguments = section.toolArgs;
-						}
-					}
-
-					parts.push(JSON.stringify(callObj, null, 2));
-
-					if (section.toolResult) {
-						parts.push(`[Tool Result]\n${section.toolResult}`);
-					}
-
-					break;
-				}
-			}
-		}
-
-		return parts.join('\n\n\n');
-	});
+	let editedReasoning = $state('');
 	let editedExtras = $derived<DatabaseMessageExtra[]>(message.extra ? [...message.extra] : []);
 	let editedUploadedFiles = $state<ChatUploadedFile[]>([]);
 	let isEditing = $state(false);
@@ -142,15 +97,19 @@
 			return message.role;
 		},
 		get originalContent() {
-			return message.role === MessageRole.ASSISTANT
-				? (rawEditContent ?? message.content)
-				: message.content;
+			return message.content;
 		},
 		get originalExtras() {
 			return message.extra || [];
 		},
-		get rawEditContent() {
-			return rawEditContent;
+		get editedReasoning() {
+			return editedReasoning;
+		},
+		get originalReasoning() {
+			return message.reasoningContent ?? '';
+		},
+		setReasoning: (value: string) => {
+			editedReasoning = value;
 		},
 		save: handleSaveEdit,
 		saveOnly: handleSaveEditOnly,
@@ -248,9 +207,7 @@
 		}
 
 		editedContent =
-			message.role === MessageRole.ASSISTANT
-				? rawEditContent || message.content || ''
-				: message.content;
+			message.role === MessageRole.ASSISTANT ? message.content || '' : message.content;
 		editedExtras = message.extra ? [...message.extra] : [];
 		editedUploadedFiles = [];
 	}
@@ -297,13 +254,14 @@
 	}
 
 	function handleEdit() {
+		editedReasoning = message.reasoningContent ?? '';
 		isEditing = true;
 
 		// Clear temporary placeholder content for system messages
 		if (message.role === MessageRole.SYSTEM && message.content === SYSTEM_MESSAGE_PLACEHOLDER) {
 			editedContent = '';
 		} else if (message.role === MessageRole.ASSISTANT) {
-			editedContent = rawEditContent || message.content || '';
+			editedContent = message.content || '';
 		} else {
 			editedContent = message.content;
 		}
@@ -385,7 +343,12 @@
 		} else {
 			// For assistant messages, preserve exact content including trailing whitespace
 			// This is important for the Continue feature to work properly
-			chatActions.editWithReplacement(message, editedContent, shouldBranchAfterEdit);
+			chatActions.editWithReplacement(
+				message,
+				editedContent,
+				shouldBranchAfterEdit,
+				editedReasoning
+			);
 		}
 
 		isEditing = false;

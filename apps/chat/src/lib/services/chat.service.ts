@@ -32,6 +32,7 @@ import {
 	ReasoningFormat,
 	StreamConnectionState
 } from '#lib/enums/index.ts';
+import { serverStore } from '#lib/stores/llama-server.svelte.ts';
 import { modelsStore } from '#lib/stores/models/index.svelte.ts';
 import { settingsStore } from '#lib/stores/settings/index.svelte.ts';
 import type {
@@ -96,6 +97,7 @@ export class ChatService {
 	 * @returns {Promise<boolean>} Promise that resolves to true if all slots are idle, false if any is processing
 	 */
 	static async areAllSlotsIdle(model?: string | null, signal?: AbortSignal): Promise<boolean> {
+		if (serverStore.props?.standalone) return true;
 		try {
 			const url = model ? `${API_SLOTS.LIST}?model=${encodeURIComponent(model)}` : API_SLOTS.LIST;
 			const res = await fetch(url, { signal });
@@ -114,6 +116,7 @@ export class ChatService {
 	 * Cancels the server-side replay buffer for a conversation, freeing its slot.
 	 */
 	static async cancelServerStream(conversationId: string, model?: string | null): Promise<void> {
+		if (serverStore.props?.standalone) return;
 		if (!conversationId) return;
 
 		try {
@@ -823,6 +826,7 @@ export class ChatService {
 	 * conv::model identity when a model was bound at POST time.
 	 */
 	static async lookupStreamSessions(conversationIds: string[]): Promise<ApiStreamSession[]> {
+		if (serverStore.props?.standalone) return [];
 		const resp = await fetch(API_STREAM.LOOKUP, {
 			body: JSON.stringify({ conversation_ids: conversationIds }),
 			headers: getJsonHeaders(),
@@ -894,6 +898,7 @@ export class ChatService {
 		signal?: AbortSignal,
 		tools?: OpenAIToolDefinition[]
 	): Promise<ChatMessageTimings | null> {
+		if (serverStore.props?.standalone) return null;
 		const normalizedMessages: ApiChatMessageData[] = await ChatService.normalizeMessagesForApi(
 			messages,
 			model
@@ -960,6 +965,7 @@ export class ChatService {
 	// probe the resume route status without consuming the stream: the SSE route has no HEAD,
 	// so issue the GET and abort it right after the status line. 0 on network error
 	static async probeResumeStatus(streamId: string): Promise<number> {
+		if (serverStore.props?.standalone) return 404;
 		if (!streamId) return 0;
 
 		const ac = new AbortController();
@@ -1302,7 +1308,7 @@ export class ChatService {
 			// tag streaming requests with the conversation id, this single header is the opt in for the
 			// server side replay buffer and powers discoverActiveStream on tab reopen. with an explicit
 			// model the ::model suffix keeps the per model session distinct
-			if (stream && conversationId) {
+			if (stream && conversationId && !serverStore.props?.standalone) {
 				headers[HEADERS.X_CONVERSATION_ID_HEADER] = streamIdentity(conversationId, options.model);
 				// persist the pending stream before the fetch: a reload during the model load or
 				// the prompt processing must still find its way back to the session once it exists
@@ -1343,7 +1349,7 @@ export class ChatService {
 					onModel,
 					onCompletionId,
 					onTimings,
-					conversationId,
+					serverStore.props?.standalone ? undefined : conversationId,
 					signal,
 					onConnectionState,
 					options.model

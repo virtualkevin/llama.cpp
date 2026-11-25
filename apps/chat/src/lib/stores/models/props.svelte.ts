@@ -65,7 +65,10 @@ export class ModelPropsManager {
 	 */
 	get supportsThinking(): boolean {
 		if (!serverStore.isRouterMode) {
-			return detectThinkingSupport(serverStore.props?.chat_template ?? '');
+			return (
+				!!serverStore.props?.standalone?.efforts.length ||
+				detectThinkingSupport(serverStore.props?.chat_template ?? '')
+			);
 		}
 
 		const modelId = this.host.selectedModelName;
@@ -78,7 +81,7 @@ export class ModelPropsManager {
 
 		const props = this.getModelProps(modelId);
 
-		return detectThinkingSupport(props?.chat_template ?? '');
+		return !!props?.standalone?.efforts.length || detectThinkingSupport(props?.chat_template ?? '');
 	}
 
 	/** Map the router modalities, the only source available while a model is not loaded. */
@@ -103,7 +106,10 @@ export class ModelPropsManager {
 	 */
 	checkModelSupportsThinking(modelId: string): boolean {
 		if (!serverStore.isRouterMode) {
-			return detectThinkingSupport(serverStore.props?.chat_template ?? '');
+			return (
+				!!serverStore.props?.standalone?.efforts.length ||
+				detectThinkingSupport(serverStore.props?.chat_template ?? '')
+			);
 		}
 
 		if (!modelId) return false;
@@ -114,7 +120,7 @@ export class ModelPropsManager {
 
 		const props = this.getModelProps(modelId);
 
-		return detectThinkingSupport(props?.chat_template ?? '');
+		return !!props?.standalone?.efforts.length || detectThinkingSupport(props?.chat_template ?? '');
 	}
 
 	constructor(private host: ModelPropsHost) {}
@@ -262,7 +268,21 @@ export class ModelPropsManager {
 
 	/** Reasoning menu of the model: the template levels, or the token budget levels. */
 	getReasoningLevels(modelId: string): ReasoningEffortLevel[] {
+		const props: ApiLlamaCppServerProps | null = serverStore.isRouterMode
+			? this.getModelProps(modelId)
+			: serverStore.props;
 		const efforts = this.getReasoningEfforts(modelId);
+		if (props?.standalone) {
+			return [
+				{
+					value: ReasoningEffort.DEFAULT,
+					label: props.standalone.default ? `Default (${props.standalone.default})` : 'Default'
+				},
+				...props.standalone.efforts
+					.filter((e: string) => Object.hasOwn(REASONING_EFFORT_LABELS, e))
+					.map((e: string) => ({ value: e as ReasoningEffort, label: REASONING_EFFORT_LABELS[e] }))
+			];
+		}
 
 		if (efforts.length === 0) return REASONING_EFFORT_BUDGET_LEVELS;
 

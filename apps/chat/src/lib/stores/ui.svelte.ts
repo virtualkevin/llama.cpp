@@ -19,6 +19,7 @@ import {
 } from '#lib/constants/index.ts';
 import { SidebarAction } from '#lib/enums/index.ts';
 import { deviceStore } from '#lib/stores/device.svelte.ts';
+import { serverStore } from '#lib/stores/llama-server.svelte.ts';
 import { settingsStore } from '#lib/stores/settings/index.svelte.ts';
 import type { Group } from '#lib/types/groups.js';
 import { remToPx } from '#lib/utils/css.ts';
@@ -135,7 +136,10 @@ class UiStore {
 	 * already picks and loads models. The page itself stays reachable by its URL.
 	 */
 	get isModelsManagerShown(): boolean {
-		return Boolean(settingsStore.getConfig(SETTINGS_KEYS.SHOW_MODELS_MANAGER));
+		return (
+			!serverStore.props?.standalone &&
+			Boolean(settingsStore.getConfig(SETTINGS_KEYS.SHOW_MODELS_MANAGER))
+		);
 	}
 
 	/** Whether the models manager route is the current page. */

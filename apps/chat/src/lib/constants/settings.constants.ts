@@ -883,10 +883,22 @@ function toSettingsSection(section: SettingsSectionEntry): SettingsSection {
 export const SETTINGS_CHAT_SECTIONS: SettingsSection[] = SETTINGS_REGISTRY.map(toSettingsSection);
 
 /** The sections to show: without the agentic features there are no tools, no loop and no MCP to set up, which are all in Tools and Agentic. */
-export function settingsChatSections(agentic: boolean): SettingsSection[] {
-	if (agentic) return SETTINGS_CHAT_SECTIONS;
+const unsupportedStandalone = new Set(
+	'backend_sampling dry_multiplier dry_base dry_allowed_length dry_penalty_last_n dynatemp_range dynatemp_exponent repeat_last_n samplers typ_p xtc_probability xtc_threshold preEncodeConversation disableReasoningParsing showModelsManager enableDiscoverModels'.split(
+		' '
+	)
+);
 
-	return SETTINGS_CHAT_SECTIONS.filter(
+export function settingsChatSections(agentic: boolean, standalone = false): SettingsSection[] {
+	const sections = standalone
+		? SETTINGS_CHAT_SECTIONS.map((section) => ({
+				...section,
+				fields: section.fields?.filter((field) => !unsupportedStandalone.has(field.key))
+			}))
+		: SETTINGS_CHAT_SECTIONS;
+	if (agentic) return sections;
+
+	return sections.filter(
 		(section) =>
 			section.slug !== SETTINGS_SECTION_SLUGS.TOOLS &&
 			section.slug !== SETTINGS_SECTION_SLUGS.AGENTIC

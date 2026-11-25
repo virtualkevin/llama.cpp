@@ -18,6 +18,8 @@
 	let isAssistantMessage = $derived(editCtx.messageRole === MessageRole.ASSISTANT);
 
 	let hasUnsavedChanges = $derived.by(() => {
+		if (editCtx.editedReasoning !== editCtx.originalReasoning) return true;
+
 		if (editCtx.editedContent !== editCtx.originalContent) return true;
 
 		if (editCtx.editedUploadedFiles.length > 0) return true;
@@ -36,7 +38,9 @@
 			(editCtx.editedUploadedFiles && editCtx.editedUploadedFiles.length > 0)
 	);
 
-	let canSubmit = $derived(editCtx.editedContent.trim().length > 0 || hasAttachments);
+	let canSubmit = $derived(
+		editCtx.editedContent.trim().length > 0 || !!editCtx.editedReasoning?.trim() || hasAttachments
+	);
 
 	function handleGlobalKeydown(event: KeyboardEvent) {
 		if (event.key === KeyboardKey.ESCAPE) {
@@ -101,6 +105,17 @@
 <svelte:window onkeydown={handleGlobalKeydown} />
 
 <div class="relative w-full max-w-4/5">
+	{#if isAssistantMessage && editCtx.setReasoning}
+		<label class="block text-caption text-muted-foreground">
+			Reasoning
+			<textarea
+				class="block w-full rounded-md border bg-background p-2 text-foreground"
+				rows="3"
+				value={editCtx.editedReasoning}
+				oninput={(event) => editCtx.setReasoning?.(event.currentTarget.value)}
+			></textarea>
+		</label>
+	{/if}
 	<ChatForm
 		bind:uploadedFiles={editCtx.editedUploadedFiles}
 		attachments={editCtx.editedExtras}

@@ -1,0 +1,6 @@
+.git
+**/node_modules
+**/.svelte-kit
+**/dist
+**/test-results
+**/playwright-report

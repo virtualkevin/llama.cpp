@@ -34,7 +34,9 @@
 
 	let { initialSection, mobileHeaderClass, onClose, onSectionChange }: Props = $props();
 
-	const sections = $derived(settingsChatSections(agenticMode.enabled));
+	const sections = $derived(
+		settingsChatSections(agenticMode.enabled, !!serverStore.props?.standalone)
+	);
 
 	let activeSlug = $derived(initialSection ?? 'general');
 

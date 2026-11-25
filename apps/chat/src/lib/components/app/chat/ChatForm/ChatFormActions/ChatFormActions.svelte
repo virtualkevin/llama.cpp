@@ -17,7 +17,13 @@
 	import { useChatFormModel } from '#lib/hooks/use-chat-form-model.svelte.ts';
 	import { useShowContextGauge } from '#lib/hooks/use-context-gauge.svelte.ts';
 	import { ChatService } from '#lib/services/index.ts';
-	import { conversationsStore, deviceStore, settingsStore, toolsStore } from '#lib/stores/index.ts';
+	import {
+		conversationsStore,
+		deviceStore,
+		serverStore,
+		settingsStore,
+		toolsStore
+	} from '#lib/stores/index.ts';
 	import { abbreviateWorkingDir } from '#lib/utils/index.ts';
 
 	interface Props {
@@ -193,7 +199,7 @@
 		</span>
 	{/if}
 
-	{#if isReasoning && !canSend}
+	{#if isReasoning && !canSend && !serverStore.props?.standalone}
 		<Button
 			class="group size-8 rounded-full p-0 max-md:size-9"
 			onclick={() =>

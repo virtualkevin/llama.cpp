@@ -219,6 +219,7 @@ export interface ApiModelDetails {
 }
 
 export interface ApiLlamaCppServerProps {
+	standalone?: { efforts: string[]; default?: string };
 	default_generation_settings: {
 		id: number;
 		id_task: number;

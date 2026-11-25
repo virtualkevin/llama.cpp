@@ -1,0 +1,19 @@
+name: webui
+services:
+  webui:
+    image: llama-chat:refresh-5bd90fa0e
+    build: .
+    container_name: llama-ui
+    network_mode: host
+    environment:
+      PORT: ${PORT:-3131}
+      HOST: ${HOST:-0.0.0.0}
+      VLLM_BASE_URL: ${VLLM_BASE_URL:-http://127.0.0.1:8000}
+      # Base capabilities match the existing launcher; per-model Compose overrides win.
+      VLLM_BACKENDS: >-
+        [{"url":"${VLLM_BASE_URL:-http://127.0.0.1:8000}","vision":true,"video":true,"reasoning":{"efforts":["off","low","medium","xhigh"],"default":"xhigh"}}]
+      DEFAULT_MAX_TOKENS: ${DEFAULT_MAX_TOKENS:-4096}
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]

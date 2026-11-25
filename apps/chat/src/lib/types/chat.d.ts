@@ -287,7 +287,8 @@ export interface ChatMessageActions {
 	editWithReplacement: (
 		message: DatabaseMessage,
 		newContent: string,
-		shouldBranch: boolean
+		shouldBranch: boolean,
+		reasoning?: string
 	) => void;
 	editUserMessagePreserveResponses: (
 		message: DatabaseMessage,
@@ -328,6 +329,9 @@ export interface ChatMessageEditState {
 	readonly editedExtras: DatabaseMessageExtra[];
 	readonly editedUploadedFiles: ChatUploadedFile[];
 	readonly originalContent: string;
+	readonly originalReasoning?: string;
+	readonly editedReasoning?: string;
+	setReasoning?: (value: string) => void;
 	readonly originalExtras: DatabaseMessageExtra[];
 	readonly showSaveOnlyOption: boolean;
 	readonly showBranchAfterEditOption: boolean;
